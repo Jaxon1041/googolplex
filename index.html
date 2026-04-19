@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Visualizing a Googolplex</title>
     <style>
+        html { scroll-behavior: smooth; }
         body {
             background-color: #050505;
             color: #00ff41;
@@ -35,13 +36,13 @@
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background: rgba(0, 20, 0, 0.9);
+            background: rgba(0, 10, 0, 0.95);
             border: 1px solid #00ff41;
             padding: 15px;
             font-size: 12px;
             z-index: 100;
-            box-shadow: 0 0 15px rgba(0, 255, 65, 0.2);
-            min-width: 250px;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.1);
+            min-width: 280px;
         }
         #number-container {
             font-size: 14px;
@@ -56,19 +57,32 @@
             margin-bottom: 10px;
             font-weight: bold;
         }
-        .loading-trigger {
-            height: 200px;
-            text-align: center;
-            padding-top: 60px;
-            color: #222;
+        .milestone {
+            display: block;
+            background: #1a1a00;
+            color: #ffcc00;
+            padding: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #ffcc00;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 12px;
         }
-        .stat-val { color: #fff; font-weight: bold; }
+        .loading-trigger {
+            height: 300px;
+            text-align: center;
+            padding-top: 100px;
+            color: #1a1a1a;
+        }
+        .stat-val { color: #fff; font-weight: bold; font-family: monospace; }
+        .speed-val { color: #00bfff; }
     </style>
 </head>
 <body>
 
 <div id="stats-box">
     <div>Zeros Scrolled: <span id="scrolled-count" class="stat-val">0</span></div>
+    <div>Current Speed: <span id="speed-val" class="stat-val speed-val">0</span> z/sec</div>
     <div>Progress: <span id="percent-val" class="stat-val">0</span>%</div>
     <div style="margin-top: 8px; border-top: 1px solid #222; padding-top: 8px; font-size: 10px; color: #888;">
         EST. DISTANCE TO END:<br>
@@ -90,7 +104,7 @@
 </div>
 
 <div id="sentinel" class="loading-trigger">
-    [ Quantum Flux: Generating more zeros ]
+    [ SCROLLING INTO INFINITY ]
 </div>
 
 <script>
@@ -99,42 +113,68 @@
     const scrolledDisplay = document.getElementById('scrolled-count');
     const percentDisplay = document.getElementById('percent-val');
     const distDisplay = document.getElementById('dist-val');
+    const speedDisplay = document.getElementById('speed-val');
 
     let totalZeros = 0;
-    // A googolplex is 10^100 zeros. 
-    // This is a string of zeros so long it's essentially infinite.
-    
+    let lastZeroCount = 0;
+    let lastTime = Date.now();
+
+    const milestones = {
+        10000: "You've scrolled past more digits than there are words in a short novel.",
+        50000: "You've passed the number of characters in a typical 200-page book.",
+        100000: "Milestone: 100,000 zeros. You are still 0.00000000...% finished.",
+        250000: "Distance context: If these were millimeters, you'd be over two football fields away from the '1'.",
+        500000: "The weight of the paper required to print this many zeros would now be noticeable.",
+        1000000: "ONE MILLION ZEROS. If you started when the Earth was formed, you'd still be scrolling."
+    };
+
     function addZeros(count) {
         const span = document.createElement('span');
         span.textContent = "0".repeat(count);
+        
+        // Check for milestones
+        const nextMilestone = Object.keys(milestones).find(m => m > totalZeros && m <= totalZeros + count);
+        if (nextMilestone) {
+            const mDiv = document.createElement('div');
+            mDiv.className = 'milestone';
+            mDiv.textContent = `[ ${milestones[nextMilestone]} ]`;
+            zerosContainer.appendChild(mDiv);
+        }
+
         zerosContainer.appendChild(span);
         totalZeros += count;
     }
 
-    // Scroll Observer
-    const observer = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting) {
-            addZeros(20000);
-            updateStats();
-        }
-    }, { rootMargin: '800px' });
+    // Performance-friendly speed & stat tracker
+    setInterval(() => {
+        const currentTime = Date.now();
+        const timeDiff = (currentTime - lastTime) / 1000;
+        const zeroDiff = totalZeros - lastZeroCount;
+        
+        const speed = Math.round(zeroDiff / timeDiff);
+        speedDisplay.textContent = speed.toLocaleString();
+        
+        lastTime = currentTime;
+        lastZeroCount = totalZeros;
 
-    function updateStats() {
         scrolledDisplay.textContent = totalZeros.toLocaleString();
         
-        // Mathematically, totalZeros / 10^100 is so close to zero 
-        // that standard JS numbers can't even represent the decimal.
-        // We simulate the microscopic progress.
-        let progress = (totalZeros / 1e25); 
-        percentDisplay.textContent = progress.toFixed(20);
-
-        // Distance in light years if each zero is 2mm wide
-        // 10^100 zeros * 2mm / (9.461e15 meters per light year)
+        // Simulating the impossible decimal
+        let progress = (totalZeros / 1e28); 
+        percentDisplay.textContent = progress.toFixed(25);
         distDisplay.textContent = "9.999... × 10^80 Light Years";
-    }
+    }, 500);
+
+    // Infinite Scroll Logic
+    const observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+            // Add blocks of 25k zeros to keep the scroll smooth
+            addZeros(25000);
+        }
+    }, { rootMargin: '1000px' });
 
     observer.observe(sentinel);
-    addZeros(40000); // Start
+    addZeros(50000); // Initial set
 </script>
 
 </body>
