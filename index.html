@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Visualizing a Googolplex</title>
     <style>
-        html { scroll-behavior: smooth; }
+        html { scroll-behavior: auto; } /* Better for infinite generation */
         body {
             background-color: #050505;
             color: #00ff41;
@@ -49,6 +49,7 @@
             letter-spacing: 2px;
             max-width: 1000px;
             margin: 0 auto;
+            min-height: 2000px;
         }
         .digit-one {
             font-size: 2.5em;
@@ -61,20 +62,20 @@
             display: block;
             background: #1a1a00;
             color: #ffcc00;
-            padding: 10px;
-            margin: 20px 0;
+            padding: 15px;
+            margin: 30px 0;
             border-left: 5px solid #ffcc00;
             font-weight: bold;
-            text-transform: uppercase;
-            font-size: 12px;
+            font-size: 13px;
+            line-height: 1.4;
         }
         .loading-trigger {
-            height: 300px;
+            height: 500px;
             text-align: center;
             padding-top: 100px;
             color: #1a1a1a;
         }
-        .stat-val { color: #fff; font-weight: bold; font-family: monospace; }
+        .stat-val { color: #fff; font-weight: bold; }
         .speed-val { color: #00bfff; }
     </style>
 </head>
@@ -86,7 +87,7 @@
     <div>Progress: <span id="percent-val" class="stat-val">0</span>%</div>
     <div style="margin-top: 8px; border-top: 1px solid #222; padding-top: 8px; font-size: 10px; color: #888;">
         EST. DISTANCE TO END:<br>
-        <span id="dist-val" style="color: #ff4141;">Calculating...</span>
+        <span id="dist-val" style="color: #ff4141;">10^80+ Light Years</span>
     </div>
 </div>
 
@@ -94,7 +95,7 @@
     <h1>The Googolplex</h1>
     <div class="fact-box">
         <strong>The Atomic Reality:</strong>
-        <p>There are only ~10^80 atoms in the observable universe. To write out a googolplex, you would need to write a zero on every single atom—then find trillions of other universes to finish the job.</p>
+        <p>There are ~10^80 atoms in the observable universe. A Googolplex is 1 followed by 10^100 zeros. Even if you turned every atom in the universe into a piece of paper, you couldn't write this number down.</p>
     </div>
 </header>
 
@@ -103,49 +104,63 @@
     <div id="zeros"></div>
 </div>
 
-<div id="sentinel" class="loading-trigger">
-    [ SCROLLING INTO INFINITY ]
-</div>
+<div id="sentinel" class="loading-trigger">[ ACCELERATING THROUGH THE VOID ]</div>
 
 <script>
     const zerosContainer = document.getElementById('zeros');
     const sentinel = document.getElementById('sentinel');
     const scrolledDisplay = document.getElementById('scrolled-count');
     const percentDisplay = document.getElementById('percent-val');
-    const distDisplay = document.getElementById('dist-val');
     const speedDisplay = document.getElementById('speed-val');
 
     let totalZeros = 0;
     let lastZeroCount = 0;
     let lastTime = Date.now();
 
-    const milestones = {
-        10000: "You've scrolled past more digits than there are words in a short novel.",
-        50000: "You've passed the number of characters in a typical 200-page book.",
-        100000: "Milestone: 100,000 zeros. You are still 0.00000000...% finished.",
-        250000: "Distance context: If these were millimeters, you'd be over two football fields away from the '1'.",
-        500000: "The weight of the paper required to print this many zeros would now be noticeable.",
-        1000000: "ONE MILLION ZEROS. If you started when the Earth was formed, you'd still be scrolling."
-    };
+    const milestones = [
+        { count: 5000, text: "You've scrolled past a standard essay's worth of digits." },
+        { count: 50000, text: "Milestone: You've passed the character count of a short novella." },
+        { count: 100000, text: "Visualizing: If each '0' was 1cm wide, these zeros would now stretch for 1 kilometer." },
+        { count: 500000, text: "Scale Check: You have scrolled more zeros than there are hairs on 5 human heads." },
+        { count: 1000000, text: "ONE MILLION ZEROS: If you had a dollar for every zero you've seen, you'd be a millionaire. You are still 0% of the way to a Googolplex." },
+        { count: 2500000, text: "Persistence: You've now scrolled past more digits than are in the entire Encyclopedia Britannica." }
+    ];
 
-    function addZeros(count) {
-        const span = document.createElement('span');
-        span.textContent = "0".repeat(count);
-        
-        // Check for milestones
-        const nextMilestone = Object.keys(milestones).find(m => m > totalZeros && m <= totalZeros + count);
-        if (nextMilestone) {
+    let nextMilestoneIndex = 0;
+
+    function addChunk(size) {
+        const remainingUntilMilestone = nextMilestoneIndex < milestones.length 
+            ? milestones[nextMilestoneIndex].count - totalZeros 
+            : Infinity;
+
+        // If a milestone is coming up in this chunk, split the chunk
+        if (size >= remainingUntilMilestone) {
+            // Add zeros up to the milestone
+            renderZeros(remainingUntilMilestone);
+            
+            // Add the milestone box
             const mDiv = document.createElement('div');
             mDiv.className = 'milestone';
-            mDiv.textContent = `[ ${milestones[nextMilestone]} ]`;
+            mDiv.textContent = `[ MILESTONE: ${milestones[nextMilestoneIndex].text} ]`;
             zerosContainer.appendChild(mDiv);
+            
+            nextMilestoneIndex++;
+            // Add the rest of the intended chunk
+            renderZeros(size - remainingUntilMilestone);
+        } else {
+            renderZeros(size);
         }
+    }
 
+    function renderZeros(count) {
+        if (count <= 0) return;
+        const span = document.createElement('span');
+        span.textContent = "0".repeat(count);
         zerosContainer.appendChild(span);
         totalZeros += count;
     }
 
-    // Performance-friendly speed & stat tracker
+    // High-frequency UI updates
     setInterval(() => {
         const currentTime = Date.now();
         const timeDiff = (currentTime - lastTime) / 1000;
@@ -159,22 +174,22 @@
 
         scrolledDisplay.textContent = totalZeros.toLocaleString();
         
-        // Simulating the impossible decimal
+        // Scientific notation for progress because it's too small for decimals
         let progress = (totalZeros / 1e28); 
-        percentDisplay.textContent = progress.toFixed(25);
-        distDisplay.textContent = "9.999... × 10^80 Light Years";
-    }, 500);
+        percentDisplay.textContent = progress.toFixed(26);
+    }, 50);
 
-    // Infinite Scroll Logic
     const observer = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting) {
-            // Add blocks of 25k zeros to keep the scroll smooth
-            addZeros(25000);
+            // Add 10,000 zeros at a time for smoother milestone precision
+            addChunk(10000);
         }
-    }, { rootMargin: '1000px' });
+    }, { rootMargin: '1200px' });
 
     observer.observe(sentinel);
-    addZeros(50000); // Initial set
+    
+    // Initial start
+    addChunk(20000);
 </script>
 
 </body>
